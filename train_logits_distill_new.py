@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+# This edition tries to avoid the problem by `fsdp`. Edited by Yijie.
+
 # coding=utf-8
 # Adapted from https://github.com/huggingface/transformers/blob/main/examples/pytorch/language-modeling/run_clm.py
 # Copyright 2020 The HuggingFace Inc. team. All rights reserved.
@@ -376,6 +379,7 @@ def get_custom_cosine_schedule_with_warmup(
 
 
 class WatermarkDistillTrainer(Trainer):
+
     def __init__(
         self,
         teacher_model: PreTrainedModel,
@@ -392,7 +396,8 @@ class WatermarkDistillTrainer(Trainer):
         if self.argmax_watermark:
             self.loss_fct = torch.nn.CrossEntropyLoss()
         else:
-            self.loss_fct = torch.nn.KLDivLoss(reduction="batchmean", log_target=True)
+            self.loss_fct = torch.nn.KLDivLoss(reduction="batchmean",
+                                               log_target=True)
 
     def compute_loss(self, model, inputs, return_outputs=False):
         """
@@ -428,7 +433,8 @@ class WatermarkDistillTrainer(Trainer):
             )
         else:  # if not argmax, do distillation against distorted distribution
             # get watermarked logits
-            watermarked_logits = self.watermarker.watermark_logits(inputs["input_ids"], teacher_outputs.logits)
+            watermarked_logits = self.watermarker.watermark_logits(
+                inputs["input_ids"], teacher_outputs.logits)
 
             # compute distillation loss
             loss = self.loss_fct(
@@ -437,8 +443,10 @@ class WatermarkDistillTrainer(Trainer):
             ) / outputs.logits.shape[1]
 
         return (loss, outputs) if return_outputs else loss
-    
-    def create_scheduler(self, num_training_steps: int, optimizer: torch.optim.Optimizer = None):
+
+    def create_scheduler(self,
+                         num_training_steps: int,
+                         optimizer: torch.optim.Optimizer = None):
         """
         Use custom cosine scheduler. Decays to final learning rate that is 10% of max learning rate.
         
@@ -451,13 +459,15 @@ class WatermarkDistillTrainer(Trainer):
         if self.args.custom_cosine_lr_scheduler:
             self.lr_scheduler = get_custom_cosine_schedule_with_warmup(
                 optimizer=self.optimizer if optimizer is None else optimizer,
-                num_warmup_steps=self.args.get_warmup_steps(num_training_steps),
+                num_warmup_steps=self.args.get_warmup_steps(
+                    num_training_steps),
                 num_training_steps=num_training_steps,
             )
             self._created_lr_scheduler = True
             return self.lr_scheduler
         else:
-            return super().create_scheduler(num_training_steps=num_training_steps, optimizer=optimizer)
+            return super().create_scheduler(
+                num_training_steps=num_training_steps, optimizer=optimizer)
 
     def _save(self, output_dir: Optional[str] = None, **kwargs):
         super()._save(output_dir=output_dir, **kwargs)
@@ -486,7 +496,7 @@ class WatermarkDistillTrainer(Trainer):
         super()._save_checkpoint(*args, **kwargs)
 
     def _fsdp_teacher_model(self, model):
-        if self.fsdp is not None:
+        if self.args.fsdp is not None:
             # PyTorch FSDP!
             from torch.distributed.fsdp.fully_sharded_data_parallel import CPUOffload
             from torch.distributed.fsdp.fully_sharded_data_parallel import FullyShardedDataParallel as FSDP
@@ -502,14 +512,15 @@ class WatermarkDistillTrainer(Trainer):
             if FSDPOption.AUTO_WRAP in self.args.fsdp:
                 if self.args.fsdp_min_num_params > 0:
                     auto_wrap_policy = functools.partial(
-                        size_based_auto_wrap_policy, min_num_params=self.args.fsdp_min_num_params
-                    )
+                        size_based_auto_wrap_policy,
+                        min_num_params=self.args.fsdp_min_num_params)
                 elif self.args.fsdp_transformer_layer_cls_to_wrap is not None:
                     transformer_cls_to_wrap = get_module_class_from_name(
-                        model, self.args.fsdp_transformer_layer_cls_to_wrap
-                    )
+                        model, self.args.fsdp_transformer_layer_cls_to_wrap)
                     if transformer_cls_to_wrap is None:
-                        raise Exception("Could not find the transformer layer class to wrap in the model.")
+                        raise Exception(
+                            "Could not find the transformer layer class to wrap in the model."
+                        )
                     auto_wrap_policy = functools.partial(
                         transformer_auto_wrap_policy,
                         # Transformer layer class to wrap
@@ -522,19 +533,21 @@ class WatermarkDistillTrainer(Trainer):
             elif self.args.bf16:
                 dtype = torch.bfloat16
             if dtype is not None:
-                mixed_precision_policy = MixedPrecision(param_dtype=dtype, reduce_dtype=dtype, buffer_dtype=dtype)
+                mixed_precision_policy = MixedPrecision(param_dtype=dtype,
+                                                        reduce_dtype=dtype,
+                                                        buffer_dtype=dtype)
             if type(model) != FSDP:
                 # XXX: Breaking the self.model convention but I see no way around it for now.
                 model = FSDP(
                     model,
-                    sharding_strategy=self.fsdp,
+                    sharding_strategy=torch.distributed.fsdp.api.ShardingStrategy.FULL_SHARD,
                     cpu_offload=cpu_offload,
                     auto_wrap_policy=auto_wrap_policy,
                     mixed_precision=mixed_precision_policy,
                     device_id=self.args.device,
-                  )
+                )
         return model
-    
+
 
 def main():
     # See all possible arguments in src/transformers/training_args.py
@@ -578,7 +591,7 @@ def main():
     )
     logger.info(f"Training/evaluation parameters {training_args}")
 
-    # Detecting last checkpoint.
+    # Detecting last checkpoint.z
     last_checkpoint = None
     if os.path.isdir(training_args.output_dir) and training_args.do_train and not training_args.overwrite_output_dir:
         last_checkpoint = get_last_checkpoint(training_args.output_dir)
@@ -882,7 +895,7 @@ def main():
             labels = labels[:, 1:].reshape(-1)
             preds = preds[:, :-1].reshape(-1)
             return metric.compute(predictions=preds, references=labels)
-        
+
     # Initialize watermarker
     if model_args.watermark_type == WatermarkType.AAR:
         watermarker = AarWatermark(

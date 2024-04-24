@@ -3,7 +3,7 @@ cd /home/yijiexu/LLMWatermark/WM-Open-Source-LLM/watermark-learnability
 
 source ~/micromamba/etc/profile.d/micromamba.sh
 micromamba activate llmwatermark
-export HF_ENDPOINT=https://hf-mirror.com
+# export HF_ENDPOINT=https://hf-mirror.com
 export OMP_NUM_THREADS=8
 
 # CUDA_VISIBLE_DEVICES=0,1,2,3,4,5 nohup torchrun --nproc_per_node=6 train_logits_distill.py \
