@@ -486,53 +486,53 @@ class WatermarkDistillTrainer(Trainer):
         super()._save_checkpoint(*args, **kwargs)
 
     def _fsdp_teacher_model(self, model):
-        if self.fsdp is not None:
-            # PyTorch FSDP!
-            from torch.distributed.fsdp.fully_sharded_data_parallel import CPUOffload
-            from torch.distributed.fsdp.fully_sharded_data_parallel import FullyShardedDataParallel as FSDP
-            from torch.distributed.fsdp.fully_sharded_data_parallel import MixedPrecision
-            from torch.distributed.fsdp.wrap import size_based_auto_wrap_policy, transformer_auto_wrap_policy
+        # if self.fsdp is not None:
+        # PyTorch FSDP!
+        from torch.distributed.fsdp.fully_sharded_data_parallel import CPUOffload
+        from torch.distributed.fsdp.fully_sharded_data_parallel import FullyShardedDataParallel as FSDP
+        from torch.distributed.fsdp.fully_sharded_data_parallel import MixedPrecision
+        from torch.distributed.fsdp.wrap import size_based_auto_wrap_policy, transformer_auto_wrap_policy
 
-            if FSDPOption.OFFLOAD in self.args.fsdp:
-                cpu_offload = CPUOffload(offload_params=True)
-            else:
-                cpu_offload = CPUOffload(offload_params=False)
+        if FSDPOption.OFFLOAD in self.args.fsdp:
+            cpu_offload = CPUOffload(offload_params=True)
+        else:
+            cpu_offload = CPUOffload(offload_params=False)
 
-            auto_wrap_policy = None
-            if FSDPOption.AUTO_WRAP in self.args.fsdp:
-                if self.args.fsdp_min_num_params > 0:
-                    auto_wrap_policy = functools.partial(
-                        size_based_auto_wrap_policy, min_num_params=self.args.fsdp_min_num_params
-                    )
-                elif self.args.fsdp_transformer_layer_cls_to_wrap is not None:
-                    transformer_cls_to_wrap = get_module_class_from_name(
-                        model, self.args.fsdp_transformer_layer_cls_to_wrap
-                    )
-                    if transformer_cls_to_wrap is None:
-                        raise Exception("Could not find the transformer layer class to wrap in the model.")
-                    auto_wrap_policy = functools.partial(
-                        transformer_auto_wrap_policy,
-                        # Transformer layer class to wrap
-                        transformer_layer_cls={transformer_cls_to_wrap},
-                    )
-            mixed_precision_policy = None
-            dtype = None
-            if self.args.fp16:
-                dtype = torch.float16
-            elif self.args.bf16:
-                dtype = torch.bfloat16
-            if dtype is not None:
-                mixed_precision_policy = MixedPrecision(param_dtype=dtype, reduce_dtype=dtype, buffer_dtype=dtype)
-            if type(model) != FSDP:
-                # XXX: Breaking the self.model convention but I see no way around it for now.
-                model = FSDP(
-                    model,
-                    sharding_strategy=self.fsdp,
-                    cpu_offload=cpu_offload,
-                    auto_wrap_policy=auto_wrap_policy,
-                    mixed_precision=mixed_precision_policy,
-                    device_id=self.args.device,
-                  )
+        auto_wrap_policy = None
+        if FSDPOption.AUTO_WRAP in self.args.fsdp:
+            if self.args.fsdp_min_num_params > 0:
+                auto_wrap_policy = functools.partial(
+                    size_based_auto_wrap_policy, min_num_params=self.args.fsdp_min_num_params
+                )
+            elif self.args.fsdp_transformer_layer_cls_to_wrap is not None:
+                transformer_cls_to_wrap = get_module_class_from_name(
+                    model, self.args.fsdp_transformer_layer_cls_to_wrap
+                )
+                if transformer_cls_to_wrap is None:
+                    raise Exception("Could not find the transformer layer class to wrap in the model.")
+                auto_wrap_policy = functools.partial(
+                    transformer_auto_wrap_policy,
+                    # Transformer layer class to wrap
+                    transformer_layer_cls={transformer_cls_to_wrap},
+                )
+        mixed_precision_policy = None
+        dtype = None
+        if self.args.fp16:
+            dtype = torch.float16
+        elif self.args.bf16:
+            dtype = torch.bfloat16
+        if dtype is not None:
+            mixed_precision_policy = MixedPrecision(param_dtype=dtype, reduce_dtype=dtype, buffer_dtype=dtype)
+        if type(model) != FSDP:
+            # XXX: Breaking the self.model convention but I see no way around it for now.
+            model = FSDP(
+                model,
+                # sharding_strategy=self.fsdp,
+                cpu_offload=cpu_offload,
+                auto_wrap_policy=auto_wrap_policy,
+                mixed_precision=mixed_precision_policy,
+                device_id=self.args.device,
+                )
         return model
     
 
@@ -578,7 +578,7 @@ def main():
     )
     logger.info(f"Training/evaluation parameters {training_args}")
 
-    # Detecting last checkpoint.
+    # Detecting last checkpoint.z
     last_checkpoint = None
     if os.path.isdir(training_args.output_dir) and training_args.do_train and not training_args.overwrite_output_dir:
         last_checkpoint = get_last_checkpoint(training_args.output_dir)
