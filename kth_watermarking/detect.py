@@ -2,12 +2,14 @@ import os, sys, argparse, time
 
 import numpy as np
 from transformers import AutoTokenizer
-from kth_watermarking.mersenne import mersenne_rng
+# from kth_watermarking.mersenne import mersenne_rng
+from mersenne import mersenne_rng
 
 import pyximport
 pyximport.install(reload_support=True, language_level=sys.version_info[0],
                   setup_args={'include_dirs':np.get_include()})
-from kth_watermarking.levenshtein import levenshtein
+# from kth_watermarking.levenshtein import levenshtein
+from levenshtein import levenshtein
 
 def permutation_test(tokens,key,n,k,vocab_size,n_runs=100):
     rng = mersenne_rng(key)
@@ -43,7 +45,7 @@ def main(args):
 
     tokenizer = AutoTokenizer.from_pretrained(args.tokenizer)
     tokens = tokenizer.encode(text, return_tensors='pt', truncation=True, max_length=2048).numpy()[0]
-    
+
     t0 = time.time()
     pval = permutation_test(tokens,args.key,args.n,len(tokens),len(tokenizer))
     print('p-value: ', pval)
@@ -51,13 +53,25 @@ def main(args):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='test for a watermark in a text document')
-    parser.add_argument('document',type=str, help='a file containing the document to test')
-    parser.add_argument('--tokenizer',default='facebook/opt-1.3b',type=str,
-            help='a HuggingFace model id of the tokenizer used by the watermarked model')
-    parser.add_argument('--n',default=256,type=int,
-            help='the length of the watermark sequence')
-    parser.add_argument('--key',default=42,type=int,
-            help='the seed for the watermark sequence')
+    parser = argparse.ArgumentParser(
+        description='test for a watermark in a text document')
+    parser.add_argument('document',
+                        type=str,
+                        help='a file containing the document to test')
+    parser.add_argument(
+        '--tokenizer',
+        default='facebook/opt-1.3b',
+        type=str,
+        help=
+        'a HuggingFace model id of the tokenizer used by the watermarked model'
+    )
+    parser.add_argument('--n',
+                        default=256,
+                        type=int,
+                        help='the length of the watermark sequence')
+    parser.add_argument('--key',
+                        default=42,
+                        type=int,
+                        help='the seed for the watermark sequence')
 
     main(parser.parse_args())

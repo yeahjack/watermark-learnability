@@ -4,3 +4,4 @@ output*
 data
 wandb
 scripts/
+*.json
