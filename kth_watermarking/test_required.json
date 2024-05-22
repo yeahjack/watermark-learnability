@@ -1,0 +1,14 @@
+{
+    "samples": {
+        "model_name_1": {
+            "model_text": [
+                "\"خلي ورقتك خضرا... صوِّت للبيئة بلبنان\"\nحذَّرنا في مرات سابقة من اقتراب موسم قطع الأشجار وبيعها في سوق تجارة الحطب مع اقتراب فصل الشتاء... إلا أن أحدا من المسؤولين لم يعر , MS he thatMS The aMSMS to- (.MS a a, to ,' thatMS MS a PD ,i to, MS The a , (, ,MSi of/ of y a a t a -sms aMSPAMSPAIMSMSMSMSPA/MSMSPAAT MAHAN,MSMSQ-,MSMSPA\n nobody PA\n nobody hasK<MSPA'AMSPAMSPA\"\nMSPA\n The 0 PAIDPA:\n➖PAULPA)\nPA\n \n 101.0:00: 0: 0<0PA PAPAPA:PAPAPAPAMSMSPA:PAMSPAMSMSMSPA:MSMSPPA 0PAMSMSPAMSPA:PA PAMS0PAMSPAMSPAMS"
+            ],
+            "watermark_config": {
+                "seed": 42,
+                "key_len": 256,
+                "vocab_size": 32000
+            }
+        }
+    }
+}

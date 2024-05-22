@@ -4,5 +4,3 @@ output*
 wandb
 models*
 *.txt
-kgw_watermarking
-kth_watermarking
