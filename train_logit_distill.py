@@ -394,7 +394,8 @@ class WatermarkLogitsDistillTrainer(Trainer):
         super()._save_checkpoint(*args, **kwargs)
 
     def _fsdp_teacher_model(self, model):
-        if self.fsdp is not None:
+        # if self.fsdp is not None:
+        if self.args.fsdp is not None:
             # PyTorch FSDP!
             from torch.distributed.fsdp.fully_sharded_data_parallel import CPUOffload
             from torch.distributed.fsdp.fully_sharded_data_parallel import FullyShardedDataParallel as FSDP
@@ -435,7 +436,8 @@ class WatermarkLogitsDistillTrainer(Trainer):
                 # XXX: Breaking the self.model convention but I see no way around it for now.
                 model = FSDP(
                     model,
-                    sharding_strategy=self.fsdp,
+                    # sharding_strategy=self.fsdp,
+                    # sharding_strategy=self.args.fsdp,
                     cpu_offload=cpu_offload,
                     auto_wrap_policy=auto_wrap_policy,
                     mixed_precision=mixed_precision_policy,

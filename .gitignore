@@ -1,7 +1,8 @@
 __pycache__
 logs
 output*
-data
 wandb
-scripts/
-*.json
+models*
+*.txt
+kgw_watermarking
+kth_watermarking

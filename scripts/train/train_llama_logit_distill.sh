@@ -62,17 +62,19 @@ if [[ "$watermark" == kth* ]]; then
     batch_size=32
     block_size=256
 else
-    batch_size=16
+    batch_size=6
     block_size=512
 fi
 
-torchrun --nproc_per_node=4 --master_port=${port} train_logit_distill.py \
+torchrun --nproc_per_node=6 --master_port=${port} train_logit_distill.py \
     --model_name_or_path "${llama}" \
-    --dataset_name Skylion007/openwebtext \
+    --dataset_name allenai/c4 \
+    --dataset_config_name en \
     --streaming \
     --per_device_train_batch_size ${batch_size} \
     --gradient_accumulation_steps 1 \
     --do_train \
+    --overwrite_output_dir \
     --max_steps 5000 \
     --logging_steps 1 \
     --output_dir "${out_dir}${model_name}" \
@@ -84,7 +86,6 @@ torchrun --nproc_per_node=4 --master_port=${port} train_logit_distill.py \
     --save_total_limit 1 \
     --tf32 True \
     --bf16 True \
-    --gradient_checkpointing True \
     ${watermark_args} \
     --watermark_seed 42 \
     --fsdp "full_shard auto_wrap" \
